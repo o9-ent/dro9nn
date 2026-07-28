@@ -93,7 +93,9 @@ runs:
           if [ "${{ inputs.cuda-version }}" == "none" ]; then
             pip install jax jaxlib
           else
-            pip install jax[cuda${{ inputs.cuda-version }}] -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+            # Strip minor version for JAX CUDA extras (e.g., 12.1 -> 12)
+            CUDA_MAJOR=$(echo "${{ inputs.cuda-version }}" | cut -d. -f1)
+            pip install "jax[cuda${CUDA_MAJOR}]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
           fi
         else
           pip install jax==${{ inputs.jax-version }} jaxlib==${{ inputs.jax-version }}

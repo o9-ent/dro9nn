@@ -30,6 +30,9 @@ concurrency:
   group: ml-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   # ML environment setup validation
   setup-validation:
@@ -129,7 +132,8 @@ jobs:
       - name: Install DGL and dependencies
         run: |
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install dgl -f https://data.dgl.ai/wheels/torch-2.0/repo.html || pip install dgl
+          # Try to install DGL, fall back to latest if specific version fails
+          pip install dgl -f https://data.dgl.ai/wheels/repo.html || pip install dgl
           pip install networkx numpy scipy pytest
 
       - name: Run GNN tests

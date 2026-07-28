@@ -212,11 +212,11 @@ function isObject(item: unknown): item is Record<string, unknown> {
   return item !== null && typeof item === 'object' && !Array.isArray(item);
 }
 
-// Unique ID generator
-let idCounter = 0;
+// Unique ID generator using crypto for better uniqueness
 export function uniqueId(prefix = ''): string {
-  idCounter += 1;
-  return `${prefix}${Date.now().toString(36)}-${idCounter.toString(36)}`;
+  const timestamp = Date.now().toString(36);
+  const randomPart = Math.random().toString(36).substring(2, 10);
+  return `${prefix}${timestamp}-${randomPart}`;
 }
 
 // Chunk array utility
