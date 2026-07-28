@@ -153,7 +153,7 @@ func init() {
 	modelDownloadCmd.Flags().StringP("output", "o", "", "output directory")
 
 	// Convert flags
-	modelConvertCmd.Flags().StringP("to", "t", "gguf", "target format (gguf, onnx, safetensors)")
+	modelConvertCmd.Flags().StringP("to", "t", "", "target format (gguf, onnx, safetensors)")
 	modelConvertCmd.MarkFlagRequired("to")
 
 	// Delete flags

@@ -4,6 +4,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -138,8 +139,8 @@ func loadConfig() (map[string]interface{}, error) {
 func saveConfig(config map[string]interface{}) error {
 	configPath := getConfigPath()
 
-	// Ensure directory exists
-	configDir := configPath[:len(configPath)-len("/config.yaml")]
+	// Ensure directory exists - use filepath.Dir for proper directory extraction
+	configDir := filepath.Dir(configPath)
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		return fmt.Errorf("could not create config directory: %w", err)
 	}
