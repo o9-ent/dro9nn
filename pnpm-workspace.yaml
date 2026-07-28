@@ -1,0 +1,33 @@
+# o9nn Monorepo - PNPM Workspace Configuration
+# Phase 1: Foundation & Consolidation
+
+packages:
+  # Core shared libraries
+  - "packages/core"
+  
+  # ML Framework Integrations
+  - "packages/ml/*"
+  
+  # LLM Infrastructure
+  - "packages/llm/*"
+  
+  # Agent Systems
+  - "packages/agents/*"
+  
+  # Graph Neural Networks
+  - "packages/gnn"
+  
+  # Echo State Networks / Reservoir Computing
+  - "packages/esn"
+  
+  # Client SDKs
+  - "packages/sdk/*"
+  
+  # CLI Tools
+  - "packages/cli"
+  
+  # Application Layer
+  - "apps/*"
+  
+  # Development Tools
+  - "tools/*"

@@ -1,0 +1,138 @@
+name: "Setup ML Environment"
+description: "Sets up a complete ML development environment with CUDA, PyTorch, JAX, and related tools"
+
+inputs:
+  python-version:
+    description: "Python version to install"
+    required: false
+    default: "3.11"
+  cuda-version:
+    description: "CUDA version to install (12.1, 11.8, or none)"
+    required: false
+    default: "none"
+  torch-version:
+    description: "PyTorch version to install"
+    required: false
+    default: "2.3"
+  jax-version:
+    description: "JAX version to install"
+    required: false
+    default: "latest"
+  install-dgl:
+    description: "Whether to install DGL"
+    required: false
+    default: "false"
+  install-reservoirpy:
+    description: "Whether to install ReservoirPy"
+    required: false
+    default: "false"
+
+outputs:
+  python-path:
+    description: "Path to Python executable"
+    value: ${{ steps.setup-python.outputs.python-path }}
+  cuda-available:
+    description: "Whether CUDA is available"
+    value: ${{ steps.check-cuda.outputs.available }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Python
+      id: setup-python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install CUDA toolkit
+      id: install-cuda
+      if: inputs.cuda-version != 'none'
+      shell: bash
+      run: |
+        # Install CUDA toolkit based on version
+        if [ "${{ inputs.cuda-version }}" == "12.1" ]; then
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+          sudo dpkg -i cuda-keyring_1.1-1_all.deb
+          sudo apt-get update
+          sudo apt-get -y install cuda-toolkit-12-1
+        elif [ "${{ inputs.cuda-version }}" == "11.8" ]; then
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+          sudo dpkg -i cuda-keyring_1.1-1_all.deb
+          sudo apt-get update
+          sudo apt-get -y install cuda-toolkit-11-8
+        fi
+        echo "CUDA_HOME=/usr/local/cuda" >> $GITHUB_ENV
+        echo "/usr/local/cuda/bin" >> $GITHUB_PATH
+
+    - name: Check CUDA availability
+      id: check-cuda
+      shell: bash
+      run: |
+        if command -v nvcc &> /dev/null; then
+          echo "available=true" >> $GITHUB_OUTPUT
+          nvcc --version
+        else
+          echo "available=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Install PyTorch
+      shell: bash
+      run: |
+        if [ "${{ inputs.cuda-version }}" == "none" ]; then
+          pip install torch==${{ inputs.torch-version }}.* torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+        elif [ "${{ inputs.cuda-version }}" == "12.1" ]; then
+          pip install torch==${{ inputs.torch-version }}.* torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+        elif [ "${{ inputs.cuda-version }}" == "11.8" ]; then
+          pip install torch==${{ inputs.torch-version }}.* torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+        fi
+
+    - name: Install JAX
+      shell: bash
+      run: |
+        if [ "${{ inputs.jax-version }}" == "latest" ]; then
+          if [ "${{ inputs.cuda-version }}" == "none" ]; then
+            pip install jax jaxlib
+          else
+            # Strip minor version for JAX CUDA extras (e.g., 12.1 -> 12)
+            CUDA_MAJOR=$(echo "${{ inputs.cuda-version }}" | cut -d. -f1)
+            pip install "jax[cuda${CUDA_MAJOR}]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+          fi
+        else
+          pip install jax==${{ inputs.jax-version }} jaxlib==${{ inputs.jax-version }}
+        fi
+
+    - name: Install additional ML packages
+      shell: bash
+      run: |
+        pip install numpy scipy scikit-learn pandas matplotlib seaborn
+        pip install transformers tokenizers sentencepiece
+        pip install onnx onnxruntime
+        pip install networkx
+
+    - name: Install DGL
+      if: inputs.install-dgl == 'true'
+      shell: bash
+      run: |
+        if [ "${{ inputs.cuda-version }}" == "none" ]; then
+          pip install dgl -f https://data.dgl.ai/wheels/repo.html
+        else
+          pip install dgl -f https://data.dgl.ai/wheels/cu${{ inputs.cuda-version }}/repo.html
+        fi
+
+    - name: Install ReservoirPy
+      if: inputs.install-reservoirpy == 'true'
+      shell: bash
+      run: |
+        pip install reservoirpy
+
+    - name: Install testing tools
+      shell: bash
+      run: |
+        pip install pytest pytest-cov pytest-benchmark pytest-xdist
+
+    - name: Verify installation
+      shell: bash
+      run: |
+        python -c "import torch; print(f'PyTorch {torch.__version__}')"
+        python -c "import jax; print(f'JAX {jax.__version__}')"
+        python -c "import numpy; print(f'NumPy {numpy.__version__}')"

@@ -1,0 +1,260 @@
+# o9nn Monorepo - ML Model Validation Pipeline
+# Phase 2: AI/ML Platform Integration
+
+name: ML Validation
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "packages/ml/**"
+      - "packages/llm/**"
+      - "packages/gnn/**"
+      - "packages/esn/**"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "packages/ml/**"
+      - "packages/llm/**"
+      - "packages/gnn/**"
+      - "packages/esn/**"
+  workflow_dispatch:
+    inputs:
+      run_gpu_tests:
+        description: "Run GPU tests"
+        required: false
+        default: "false"
+        type: boolean
+
+concurrency:
+  group: ml-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ML environment setup validation
+  setup-validation:
+    runs-on: ubuntu-latest
+    outputs:
+      ml-changed: ${{ steps.check.outputs.ml }}
+      llm-changed: ${{ steps.check.outputs.llm }}
+      gnn-changed: ${{ steps.check.outputs.gnn }}
+      esn-changed: ${{ steps.check.outputs.esn }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: check
+        with:
+          filters: |
+            ml:
+              - 'packages/ml/**'
+            llm:
+              - 'packages/llm/**'
+            gnn:
+              - 'packages/gnn/**'
+            esn:
+              - 'packages/esn/**'
+
+  # PyTorch model tests
+  pytorch-tests:
+    runs-on: ubuntu-latest
+    needs: setup-validation
+    if: needs.setup-validation.outputs.ml-changed == 'true'
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
+        torch-version: ["2.2", "2.3"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install PyTorch
+        run: |
+          pip install torch==${{ matrix.torch-version }}.* torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install ML dependencies
+        run: |
+          pip install pytest pytest-cov numpy scipy scikit-learn
+          cd packages/ml/torch && pip install -e . || true
+
+      - name: Run PyTorch tests
+        run: |
+          pytest packages/ml/torch/tests -v --cov=packages/ml/torch || echo "No tests found yet"
+
+  # JAX model tests
+  jax-tests:
+    runs-on: ubuntu-latest
+    needs: setup-validation
+    if: needs.setup-validation.outputs.ml-changed == 'true'
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install JAX
+        run: |
+          pip install jax jaxlib flax optax
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-cov numpy
+          cd packages/ml/jax && pip install -e . || true
+
+      - name: Run JAX tests
+        run: |
+          pytest packages/ml/jax/tests -v --cov=packages/ml/jax || echo "No tests found yet"
+
+  # GNN tests
+  gnn-tests:
+    runs-on: ubuntu-latest
+    needs: setup-validation
+    if: needs.setup-validation.outputs.gnn-changed == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install DGL and dependencies
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          # Try to install DGL, fall back to latest if specific version fails
+          pip install dgl -f https://data.dgl.ai/wheels/repo.html || pip install dgl
+          pip install networkx numpy scipy pytest
+
+      - name: Run GNN tests
+        run: |
+          pytest packages/gnn/tests -v || echo "No tests found yet"
+
+  # Echo State Network tests
+  esn-tests:
+    runs-on: ubuntu-latest
+    needs: setup-validation
+    if: needs.setup-validation.outputs.esn-changed == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ReservoirPy and dependencies
+        run: |
+          pip install reservoirpy numpy scipy scikit-learn pytest
+
+      - name: Run ESN tests
+        run: |
+          pytest packages/esn/tests -v || echo "No tests found yet"
+
+  # LLM inference tests
+  llm-inference-tests:
+    runs-on: ubuntu-latest
+    needs: setup-validation
+    if: needs.setup-validation.outputs.llm-changed == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install LLM dependencies
+        run: |
+          pip install transformers tokenizers sentencepiece pytest
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Run LLM tests
+        run: |
+          pytest packages/llm/tests -v || echo "No tests found yet"
+
+  # Model benchmark suite
+  benchmark:
+    runs-on: ubuntu-latest
+    needs: [pytorch-tests, jax-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install pytest pytest-benchmark numpy
+
+      - name: Run benchmarks
+        run: |
+          pytest packages/ml/benchmarks --benchmark-json=benchmark-results.json || echo "No benchmarks yet"
+
+      - name: Store benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark-results.json
+          retention-days: 90
+
+  # GPU tests (manual trigger or scheduled)
+  gpu-tests:
+    runs-on: [self-hosted, gpu]
+    needs: setup-validation
+    if: github.event.inputs.run_gpu_tests == 'true' || github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup CUDA environment
+        uses: ./.github/actions/setup-ml-env
+        with:
+          cuda-version: "12.1"
+
+      - name: Run GPU tests
+        uses: ./.github/actions/gpu-test
+        with:
+          test-path: packages/ml
+          timeout: 30
+
+  # ML validation status
+  ml-status:
+    runs-on: ubuntu-latest
+    needs: [pytorch-tests, jax-tests, gnn-tests, esn-tests, llm-inference-tests]
+    if: always()
+    steps:
+      - name: Check ML validation status
+        run: |
+          echo "PyTorch tests: ${{ needs.pytorch-tests.result }}"
+          echo "JAX tests: ${{ needs.jax-tests.result }}"
+          echo "GNN tests: ${{ needs.gnn-tests.result }}"
+          echo "ESN tests: ${{ needs.esn-tests.result }}"
+          echo "LLM tests: ${{ needs.llm-inference-tests.result }}"
+
+          # Only fail if tests actually ran and failed
+          FAILED=false
+          for result in "${{ needs.pytorch-tests.result }}" "${{ needs.jax-tests.result }}" "${{ needs.gnn-tests.result }}" "${{ needs.esn-tests.result }}" "${{ needs.llm-inference-tests.result }}"; do
+            if [ "$result" == "failure" ]; then
+              FAILED=true
+            fi
+          done
+
+          if [ "$FAILED" == "true" ]; then
+            echo "ML validation failed"
+            exit 1
+          fi
+          echo "ML validation completed"

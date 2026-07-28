@@ -1,14 +1,111 @@
-# o9nn Organization Fractal Map
+# o9nn Integrated Monorepo
 
-This repository is a fractal representation of the **o9nn** GitHub organization.
+<p align="center">
+  <strong>AI/ML Platform • LLM Infrastructure • Agent Systems • Graph Neural Networks</strong>
+</p>
 
-## Structure (Level 2 Mapping)
+<p align="center">
+  <a href="https://github.com/o9nn/dro9nn/actions/workflows/core-ci.yml"><img src="https://github.com/o9nn/dro9nn/actions/workflows/core-ci.yml/badge.svg" alt="CI Status"></a>
+  <a href="https://github.com/o9nn/dro9nn/actions/workflows/security-scan.yml"><img src="https://github.com/o9nn/dro9nn/actions/workflows/security-scan.yml/badge.svg" alt="Security Scan"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+</p>
+
+---
+
+## Overview
+
+This monorepo contains the integrated o9nn ecosystem, providing:
+
+- **🧠 ML Frameworks**: PyTorch, JAX, ONNX integrations
+- **💬 LLM Infrastructure**: Inference, training, and serving
+- **🤖 Agent Systems**: Multi-agent orchestration and cognitive architectures
+- **🔗 Graph Neural Networks**: GCN, GAT, GraphSAGE, GIN implementations
+- **🌊 Reservoir Computing**: Echo State Networks (ESN)
+- **📦 SDKs**: Python, TypeScript, Go, C++ client libraries
+- **🛠️ CLI Tools**: Model management and development utilities
+
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/o9nn/dro9nn.git
+cd dro9nn
+
+# Install dependencies
+pnpm install
+
+# Build all packages
+pnpm turbo build
+
+# Run tests
+pnpm turbo test
+```
+
+## Package Structure
+
+```
+packages/
+├── core/           # Shared utilities and types
+├── ml/             # ML framework integrations
+│   ├── torch/      # PyTorch ecosystem
+│   ├── jax/        # JAX ecosystem
+│   └── onnx/       # ONNX runtime
+├── llm/            # LLM infrastructure
+│   ├── inference/  # Model inference
+│   ├── training/   # Fine-tuning
+│   └── serving/    # Production serving
+├── agents/         # Agent systems
+│   ├── orchestration/
+│   ├── metagpt/
+│   └── cogfoundry/
+├── gnn/            # Graph Neural Networks
+├── esn/            # Echo State Networks
+├── sdk/            # Client SDKs
+└── cli/            # CLI tools
+```
+
+## Documentation
+
+- [Getting Started](./docs/guides/installation.md)
+- [API Reference](./docs/api/)
+- [Architecture](./docs/architecture/overview.md)
+- [Contributing](./CONTRIBUTING.md)
+
+## Development
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup and guidelines.
+
+```bash
+# Development mode
+pnpm dev
+
+# Lint
+pnpm lint
+
+# Type check
+pnpm typecheck
+
+# Format
+pnpm format
+```
+
+## License
+
+MIT © o9nn Organization
+
+---
+
+## Legacy Repository Mapping
+
+This repository also serves as a fractal representation of the **o9nn** GitHub organization.
+
+### Structure (Level 2 Mapping)
 
 - **This Repo** (`o9-ent/o9nn`) = o9nn organization
 - **Folders** = Repositories in o9nn
 - **Files in Folders** = Root contents of each repository
 
-## Statistics
+### Statistics
 
 | Metric | Count |
 |--------|-------|

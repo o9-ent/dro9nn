@@ -1,0 +1,77 @@
+# o9nn Monorepo - Prettier Ignore
+
+# Dependencies
+node_modules/
+vendor/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+target/
+
+# Generated files
+*.min.js
+*.min.css
+*.bundle.js
+*.chunk.js
+coverage/
+.nyc_output/
+
+# Package manager locks (keep them but don't format)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Config files that need exact formatting
+*.lock
+*.svg
+*.ico
+
+# Python
+__pycache__/
+*.pyc
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Go
+go.sum
+
+# Rust
+Cargo.lock
+
+# Documentation builds
+docs/_build/
+site/
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# Environment
+.env*
+!.env.example
+
+# Test fixtures
+**/fixtures/**
+**/snapshots/**
+
+# Legacy repository folders (fractal mapping)
+9it/
+ANNetGPGPU/
+APL-253/
+ARTv2/
+ATen/
+ATenCo9/
+ATenS/
+ATenSpace/
+ATenTree/
+AgentBaker/
+AgenticAI/
+ArcGameEngine/
+# ... (all existing repo folders are excluded)

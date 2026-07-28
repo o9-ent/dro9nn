@@ -1,0 +1,115 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    ".env",
+    ".env.local",
+    ".env.production",
+    "tsconfig.json"
+  ],
+  "globalEnv": [
+    "NODE_ENV",
+    "CI",
+    "CUDA_VISIBLE_DEVICES",
+    "HF_TOKEN",
+    "OPENAI_API_KEY"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**",
+        "build/**",
+        "target/**"
+      ]
+    },
+    "build:docker": {
+      "dependsOn": ["build"],
+      "inputs": ["Dockerfile", "docker-compose*.yml"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "inputs": ["$TURBO_DEFAULT$", "tests/**"],
+      "outputs": ["coverage/**"],
+      "env": ["CI"]
+    },
+    "test:unit": {
+      "dependsOn": ["build"],
+      "inputs": ["$TURBO_DEFAULT$", "tests/unit/**"],
+      "outputs": ["coverage/**"]
+    },
+    "test:integration": {
+      "dependsOn": ["build"],
+      "inputs": ["$TURBO_DEFAULT$", "tests/integration/**"],
+      "outputs": []
+    },
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "inputs": ["$TURBO_DEFAULT$", "tests/e2e/**"],
+      "outputs": [],
+      "cache": false
+    },
+    "test:gpu": {
+      "dependsOn": ["build"],
+      "inputs": ["$TURBO_DEFAULT$", "tests/**"],
+      "outputs": [],
+      "cache": false,
+      "env": ["CUDA_VISIBLE_DEVICES"]
+    },
+    "lint": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "eslint.config.*", ".eslintrc*", "ruff.toml"],
+      "outputs": []
+    },
+    "lint:fix": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": [],
+      "cache": false
+    },
+    "format": {
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": [],
+      "cache": false
+    },
+    "format:check": {
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "tsconfig*.json"],
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false
+    },
+    "docs": {
+      "dependsOn": ["build"],
+      "inputs": ["$TURBO_DEFAULT$", "docs/**"],
+      "outputs": ["docs/_build/**", "site/**"]
+    },
+    "docs:serve": {
+      "cache": false,
+      "persistent": true
+    },
+    "benchmark": {
+      "dependsOn": ["build"],
+      "inputs": ["$TURBO_DEFAULT$", "benchmarks/**"],
+      "outputs": ["benchmark-results/**"],
+      "cache": false
+    },
+    "release": {
+      "dependsOn": ["build", "test", "lint"],
+      "outputs": [],
+      "cache": false
+    }
+  }
+}
