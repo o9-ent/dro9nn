@@ -1,0 +1,91 @@
+# o9nn Monorepo - EditorConfig
+# https://editorconfig.org
+
+# Top-most EditorConfig file
+root = true
+
+# Default settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# JavaScript, TypeScript, JSON, YAML
+[*.{js,jsx,ts,tsx,json,yaml,yml}]
+indent_size = 2
+
+# Markdown
+[*.md]
+trim_trailing_whitespace = false
+
+# Python
+[*.py]
+indent_size = 4
+max_line_length = 100
+
+# Go
+[*.go]
+indent_style = tab
+indent_size = 4
+
+# Rust
+[*.rs]
+indent_size = 4
+
+# C/C++
+[*.{c,cpp,h,hpp,cc,cxx}]
+indent_size = 4
+
+# Lua
+[*.lua]
+indent_size = 3
+
+# Julia
+[*.jl]
+indent_size = 4
+
+# Makefiles
+[Makefile]
+indent_style = tab
+
+# Shell scripts
+[*.{sh,bash,zsh}]
+indent_size = 2
+
+# Docker
+[Dockerfile*]
+indent_size = 4
+
+# CMake
+[CMakeLists.txt]
+indent_size = 4
+
+[*.cmake]
+indent_size = 4
+
+# TOML
+[*.toml]
+indent_size = 4
+
+# Proto
+[*.proto]
+indent_size = 2
+
+# XML
+[*.xml]
+indent_size = 2
+
+# HTML
+[*.html]
+indent_size = 2
+
+# CSS/SCSS
+[*.{css,scss,sass,less}]
+indent_size = 2
+
+# Git
+[.git*]
+indent_size = 4

@@ -1,0 +1,123 @@
+name: "Cross-Compile"
+description: "Cross-compile packages for multiple platforms and architectures"
+
+inputs:
+  package-path:
+    description: "Path to the package to compile"
+    required: true
+  platforms:
+    description: "Comma-separated list of platforms (linux, darwin, windows)"
+    required: false
+    default: "linux,darwin,windows"
+  architectures:
+    description: "Comma-separated list of architectures (amd64, arm64)"
+    required: false
+    default: "amd64,arm64"
+  output-dir:
+    description: "Output directory for compiled binaries"
+    required: false
+    default: "dist"
+
+outputs:
+  artifacts-path:
+    description: "Path to compiled artifacts"
+    value: ${{ inputs.package-path }}/${{ inputs.output-dir }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.22"
+
+    - name: Setup cross-compilation tools
+      shell: bash
+      run: |
+        # Install cross-compilation toolchains
+        sudo apt-get update
+        sudo apt-get install -y \
+          gcc-aarch64-linux-gnu \
+          gcc-mingw-w64-x86-64 \
+          gcc-mingw-w64-i686 || true
+
+    - name: Prepare output directory
+      shell: bash
+      run: |
+        mkdir -p ${{ inputs.package-path }}/${{ inputs.output-dir }}
+
+    - name: Cross-compile Go packages
+      shell: bash
+      run: |
+        cd ${{ inputs.package-path }}
+
+        IFS=',' read -ra PLATFORMS <<< "${{ inputs.platforms }}"
+        IFS=',' read -ra ARCHS <<< "${{ inputs.architectures }}"
+
+        for GOOS in "${PLATFORMS[@]}"; do
+          for GOARCH in "${ARCHS[@]}"; do
+            # Skip unsupported combinations
+            if [[ "$GOOS" == "windows" && "$GOARCH" == "arm64" ]]; then
+              continue
+            fi
+
+            OUTPUT_NAME="o9nn-cli-${GOOS}-${GOARCH}"
+            if [[ "$GOOS" == "windows" ]]; then
+              OUTPUT_NAME="${OUTPUT_NAME}.exe"
+            fi
+
+            echo "Building for $GOOS/$GOARCH..."
+            CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build \
+              -ldflags="-s -w" \
+              -o "${{ inputs.output-dir }}/${OUTPUT_NAME}" \
+              ./cmd/... 2>/dev/null || echo "No Go cmd found, skipping"
+          done
+        done
+
+    - name: Cross-compile Rust packages
+      shell: bash
+      run: |
+        cd ${{ inputs.package-path }}
+
+        if [ -f "Cargo.toml" ]; then
+          # Install Rust targets
+          rustup target add x86_64-unknown-linux-gnu || true
+          rustup target add aarch64-unknown-linux-gnu || true
+          rustup target add x86_64-apple-darwin || true
+          rustup target add aarch64-apple-darwin || true
+          rustup target add x86_64-pc-windows-gnu || true
+
+          IFS=',' read -ra PLATFORMS <<< "${{ inputs.platforms }}"
+
+          for platform in "${PLATFORMS[@]}"; do
+            case $platform in
+              linux)
+                cargo build --release --target x86_64-unknown-linux-gnu || true
+                ;;
+              darwin)
+                cargo build --release --target x86_64-apple-darwin || true
+                ;;
+              windows)
+                cargo build --release --target x86_64-pc-windows-gnu || true
+                ;;
+            esac
+          done
+        fi
+
+    - name: Create checksums
+      shell: bash
+      run: |
+        cd ${{ inputs.package-path }}/${{ inputs.output-dir }}
+        if ls * 1> /dev/null 2>&1; then
+          sha256sum * > checksums.txt
+          echo "Generated checksums:"
+          cat checksums.txt
+        else
+          echo "No files to checksum"
+        fi
+
+    - name: List artifacts
+      shell: bash
+      run: |
+        echo "Compiled artifacts:"
+        ls -la ${{ inputs.package-path }}/${{ inputs.output-dir }}/ || echo "No artifacts found"

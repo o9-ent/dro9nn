@@ -1,0 +1,344 @@
+# o9nn Monorepo - Release Pipeline
+# Phase 1: Foundation & Consolidation
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "*@*"
+  workflow_dispatch:
+    inputs:
+      package:
+        description: "Package to release (leave empty for all changed)"
+        required: false
+        type: string
+      version:
+        description: "Version bump (major, minor, patch, or specific version)"
+        required: false
+        default: "patch"
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+          - prerelease
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+jobs:
+  # Prepare release
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      release-type: ${{ steps.check.outputs.type }}
+      version: ${{ steps.version.outputs.version }}
+      packages: ${{ steps.packages.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check release type
+        id: check
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "type=monorepo" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == *@* ]]; then
+            echo "type=package" >> $GITHUB_OUTPUT
+          else
+            echo "type=manual" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+            VERSION="${VERSION#*@}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Determine packages to release
+        id: packages
+        run: |
+          if [ -n "${{ github.event.inputs.package }}" ]; then
+            echo "packages=${{ github.event.inputs.package }}" >> $GITHUB_OUTPUT
+          else
+            echo "packages=all" >> $GITHUB_OUTPUT
+          fi
+
+  # Build release artifacts
+  build:
+    runs-on: ubuntu-latest
+    needs: prepare
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile || pnpm install
+
+      - name: Build packages
+        run: pnpm turbo build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ matrix.os }}
+          path: |
+            packages/*/dist
+            packages/cli/bin
+          retention-days: 7
+
+  # Publish to npm
+  publish-npm:
+    runs-on: ubuntu-latest
+    needs: [prepare, build]
+    if: needs.prepare.outputs.packages == 'all' || contains(needs.prepare.outputs.packages, 'sdk/typescript')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts-ubuntu-latest
+
+      - name: Publish to npm
+        run: |
+          pnpm install --frozen-lockfile || pnpm install
+          pnpm turbo release --filter="./packages/sdk/typescript" --filter="./packages/core"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+
+  # Publish to PyPI
+  publish-pypi:
+    runs-on: ubuntu-latest
+    needs: [prepare, build]
+    if: needs.prepare.outputs.packages == 'all' || contains(needs.prepare.outputs.packages, 'sdk/python')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Build packages
+        run: |
+          for pkg in packages/sdk/python packages/core packages/ml/* packages/llm/* packages/gnn packages/esn; do
+            if [ -f "$pkg/pyproject.toml" ]; then
+              cd "$pkg" && python -m build && cd -
+            fi
+          done
+        continue-on-error: true
+
+      - name: Publish to PyPI
+        run: |
+          for pkg in packages/*/dist/*.whl packages/*/dist/*.tar.gz; do
+            if [ -f "$pkg" ]; then
+              twine upload "$pkg" --skip-existing
+            fi
+          done
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        continue-on-error: true
+
+  # Publish Go modules
+  publish-go:
+    runs-on: ubuntu-latest
+    needs: [prepare, build]
+    if: needs.prepare.outputs.packages == 'all' || contains(needs.prepare.outputs.packages, 'cli')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Tag Go modules
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          for mod in packages/sdk/go packages/cli; do
+            if [ -f "$mod/go.mod" ]; then
+              MOD_NAME=$(basename "$mod")
+              git tag "${MOD_NAME}/v${VERSION}" || true
+            fi
+          done
+        continue-on-error: true
+
+  # Build and publish Docker images
+  publish-docker:
+    runs-on: ubuntu-latest
+    needs: [prepare, build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker images
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          for app in apps/*/Dockerfile; do
+            if [ -f "$app" ]; then
+              APP_DIR=$(dirname "$app")
+              APP_NAME=$(basename "$APP_DIR")
+              docker buildx build \
+                --platform linux/amd64,linux/arm64 \
+                --tag ghcr.io/${{ github.repository }}/${APP_NAME}:${VERSION} \
+                --tag ghcr.io/${{ github.repository }}/${APP_NAME}:latest \
+                --push \
+                "$APP_DIR"
+            fi
+          done
+        continue-on-error: true
+
+  # Create GitHub release
+  github-release:
+    runs-on: ubuntu-latest
+    needs: [prepare, build, publish-npm, publish-pypi, publish-go, publish-docker]
+    if: always() && needs.build.result == 'success'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -n "$PREVIOUS_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" "$PREVIOUS_TAG"..HEAD)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" -20)
+          fi
+
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ needs.prepare.outputs.version }}
+          body: |
+            ## What's Changed
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ## Packages Released
+
+            - @o9nn/core
+            - @o9nn/cog-sdk-python
+            - @o9nn/cog-sdk-ts
+            - @o9nn/cli
+
+            ## Installation
+
+            **npm:**
+            ```bash
+            npm install @o9nn/cog-sdk
+            ```
+
+            **pip:**
+            ```bash
+            pip install o9nn
+            ```
+
+            **Go:**
+            ```bash
+            go get github.com/o9nn/dro9nn/packages/sdk/go
+            ```
+
+            **Docker:**
+            ```bash
+            docker pull ghcr.io/o9nn/dro9nn/api-server:${{ needs.prepare.outputs.version }}
+            ```
+          draft: false
+          prerelease: ${{ contains(needs.prepare.outputs.version, '-') }}
+          files: |
+            artifacts/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Notify release completion
+  notify:
+    runs-on: ubuntu-latest
+    needs: [github-release]
+    if: always()
+    steps:
+      - name: Release notification
+        run: |
+          echo "Release ${{ needs.prepare.outputs.version }} completed"
+          echo "Status: ${{ needs.github-release.result }}"

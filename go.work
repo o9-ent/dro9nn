@@ -1,0 +1,37 @@
+// o9nn Monorepo - Go Workspace Configuration
+// Phase 1: Foundation & Consolidation
+
+go 1.22
+
+use (
+	// Core packages
+	./packages/core
+	
+	// ML integrations
+	./packages/ml/torch
+	./packages/ml/jax
+	./packages/ml/onnx
+	
+	// LLM infrastructure
+	./packages/llm/inference
+	./packages/llm/training
+	./packages/llm/serving
+	
+	// Agent systems
+	./packages/agents/orchestration
+	
+	// Graph neural networks
+	./packages/gnn
+	
+	// Echo State Networks
+	./packages/esn
+	
+	// SDKs
+	./packages/sdk/go
+	
+	// CLI
+	./packages/cli
+	
+	// Applications
+	./apps/api-server
+)

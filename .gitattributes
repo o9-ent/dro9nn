@@ -1,0 +1,128 @@
+# o9nn Monorepo - Git Attributes
+
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# =========================
+# Source Files
+# =========================
+*.js    text eol=lf
+*.jsx   text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.json  text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.md    text eol=lf
+*.mdx   text eol=lf
+*.css   text eol=lf
+*.scss  text eol=lf
+*.html  text eol=lf
+*.xml   text eol=lf
+*.toml  text eol=lf
+
+# Python
+*.py    text eol=lf diff=python
+*.pyi   text eol=lf
+
+# Go
+*.go    text eol=lf diff=golang
+
+# C/C++
+*.c     text eol=lf diff=cpp
+*.cpp   text eol=lf diff=cpp
+*.cc    text eol=lf diff=cpp
+*.cxx   text eol=lf diff=cpp
+*.h     text eol=lf diff=cpp
+*.hpp   text eol=lf diff=cpp
+*.hxx   text eol=lf diff=cpp
+
+# Rust
+*.rs    text eol=lf diff=rust
+
+# Lua
+*.lua   text eol=lf
+
+# Julia
+*.jl    text eol=lf
+
+# Shell
+*.sh    text eol=lf
+*.bash  text eol=lf
+*.zsh   text eol=lf
+
+# =========================
+# Config Files
+# =========================
+.editorconfig   text eol=lf
+.gitattributes  text eol=lf
+.gitignore      text eol=lf
+.prettierrc     text eol=lf
+.eslintrc*      text eol=lf
+Makefile        text eol=lf
+Dockerfile      text eol=lf
+docker-compose* text eol=lf
+
+# =========================
+# Binary Files
+# =========================
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.svg   text
+
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+*.otf   binary
+
+*.pdf   binary
+*.zip   binary
+*.tar   binary
+*.gz    binary
+*.7z    binary
+
+# ML model files
+*.ckpt        binary
+*.pth         binary
+*.pt          binary
+*.safetensors binary
+*.gguf        binary
+*.ggml        binary
+*.bin         binary
+*.onnx        binary
+
+# =========================
+# Lock Files (don't diff)
+# =========================
+pnpm-lock.yaml  -diff
+package-lock.json -diff
+yarn.lock       -diff
+go.sum          -diff
+Cargo.lock      -diff
+poetry.lock     -diff
+
+# =========================
+# Linguist Overrides
+# =========================
+# Mark generated files
+**/dist/** linguist-generated
+**/.next/** linguist-generated
+**/coverage/** linguist-generated
+
+# Mark vendor files
+vendor/** linguist-vendored
+node_modules/** linguist-vendored
+
+# Mark documentation
+docs/** linguist-documentation
+*.md linguist-documentation
+
+# Legacy repository folders (fractal mapping)
+9it/** linguist-vendored
+ANNetGPGPU/** linguist-vendored
+# ... (all fractal mapping folders)
