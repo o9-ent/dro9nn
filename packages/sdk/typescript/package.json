@@ -1,0 +1,75 @@
+{
+  "name": "@o9nn/cog-sdk",
+  "version": "0.1.0",
+  "description": "o9nn Cognitive SDK - TypeScript/JavaScript client for the o9nn platform",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.mjs",
+      "require": "./dist/client/index.js"
+    },
+    "./models": {
+      "types": "./dist/models/index.d.ts",
+      "import": "./dist/models/index.mjs",
+      "require": "./dist/models/index.js"
+    },
+    "./agents": {
+      "types": "./dist/agents/index.d.ts",
+      "import": "./dist/agents/index.mjs",
+      "require": "./dist/agents/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/client/index.ts src/models/index.ts src/agents/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts src/client/index.ts src/models/index.ts src/agents/index.ts --format cjs,esm --dts --watch",
+    "lint": "eslint src/",
+    "test": "vitest",
+    "test:unit": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "o9nn",
+    "sdk",
+    "ai",
+    "ml",
+    "llm",
+    "agents",
+    "cognitive"
+  ],
+  "author": "o9nn Organization",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/o9nn/dro9nn.git",
+    "directory": "packages/sdk/typescript"
+  },
+  "bugs": {
+    "url": "https://github.com/o9nn/dro9nn/issues"
+  },
+  "homepage": "https://github.com/o9nn/dro9nn/tree/main/packages/sdk/typescript#readme",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@o9nn/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.0.0"
+  }
+}
