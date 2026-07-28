@@ -1,7 +1,7 @@
 import {
   ModelManager,
   createModelConfig
-} from "../chunk-XEMUOERT.mjs";
+} from "../chunk-QMXPA3DE.mjs";
 export {
   ModelManager,
   createModelConfig

@@ -68,28 +68,35 @@ export class AgentManager {
    * Get agent information
    */
   async get(agentId: string): Promise<AgentInfo> {
-    return this.client.get<AgentInfo>(`/api/v1/agents/${agentId}`);
+    return this.client.get<AgentInfo>(`/api/v1/agents/${encodeURIComponent(agentId)}`);
   }
 
   /**
    * Create a new agent
+   * NOTE: Tools with execute functions are stripped before sending to the API
+   * as functions cannot be serialized. Use local tool registration for client-side execution.
    */
   async create(config: AgentConfig): Promise<AgentInfo> {
-    return this.client.post<AgentInfo>('/api/v1/agents', config);
+    // Strip execute functions from tools before sending to API
+    const apiConfig = {
+      ...config,
+      tools: config.tools?.map(({ execute: _, ...tool }) => tool),
+    };
+    return this.client.post<AgentInfo>('/api/v1/agents', apiConfig);
   }
 
   /**
    * Delete an agent
    */
   async delete(agentId: string): Promise<void> {
-    await this.client.delete(`/api/v1/agents/${agentId}`);
+    await this.client.delete(`/api/v1/agents/${encodeURIComponent(agentId)}`);
   }
 
   /**
    * Chat with an agent
    */
   async chat(agentId: string, message: string, history?: AgentMessage[]): Promise<AgentResponse> {
-    return this.client.post<AgentResponse>(`/api/v1/agents/${agentId}/chat`, {
+    return this.client.post<AgentResponse>(`/api/v1/agents/${encodeURIComponent(agentId)}/chat`, {
       message,
       history,
     });
@@ -103,7 +110,7 @@ export class AgentManager {
     toolCallId: string,
     result: unknown
   ): Promise<AgentResponse> {
-    return this.client.post<AgentResponse>(`/api/v1/agents/${agentId}/tool-result`, {
+    return this.client.post<AgentResponse>(`/api/v1/agents/${encodeURIComponent(agentId)}/tool-result`, {
       toolCallId,
       result,
     });
@@ -113,16 +120,16 @@ export class AgentManager {
    * Get conversation history
    */
   async getHistory(agentId: string, sessionId?: string): Promise<ConversationHistory> {
-    const params = sessionId ? `?sessionId=${sessionId}` : '';
-    return this.client.get<ConversationHistory>(`/api/v1/agents/${agentId}/history${params}`);
+    const params = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : '';
+    return this.client.get<ConversationHistory>(`/api/v1/agents/${encodeURIComponent(agentId)}/history${params}`);
   }
 
   /**
    * Clear conversation history
    */
   async clearHistory(agentId: string, sessionId?: string): Promise<void> {
-    const params = sessionId ? `?sessionId=${sessionId}` : '';
-    await this.client.delete(`/api/v1/agents/${agentId}/history${params}`);
+    const params = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : '';
+    await this.client.delete(`/api/v1/agents/${encodeURIComponent(agentId)}/history${params}`);
   }
 }
 

@@ -16,6 +16,8 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   body?: unknown;
   timeout?: number;
+  /** Skip retry for this request (useful for non-idempotent operations) */
+  noRetry?: boolean;
 }
 
 export interface ApiResponse<T> {
@@ -69,34 +71,42 @@ export class CogClient {
 
     this.logger.debug(`${method} ${endpoint}`);
 
-    const response = await retry(
-      async () => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(
-          () => controller.abort(),
-          options.timeout || this.config.timeout
-        );
+    // Only retry idempotent methods (GET) by default
+    // Non-idempotent operations may be retried explicitly with noRetry: false
+    const shouldRetry = options.noRetry !== true && method === 'GET';
 
-        try {
-          const res = await fetch(url, {
-            ...fetchOptions,
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-          return res;
-        } catch (error) {
-          clearTimeout(timeoutId);
-          throw error;
-        }
-      },
-      {
-        maxAttempts: 3,
-        delay: 1000,
-        onError: (error, attempt) => {
-          this.logger.warn(`Request failed (attempt ${attempt}): ${error.message}`);
-        },
+    const makeRequest = async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        options.timeout || this.config.timeout
+      );
+
+      try {
+        const res = await fetch(url, {
+          ...fetchOptions,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        return res;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
       }
-    );
+    };
+
+    const response = shouldRetry
+      ? await retry(
+          makeRequest,
+          {
+            maxAttempts: 3,
+            delay: 1000,
+            onError: (error, attempt) => {
+              this.logger.warn(`Request failed (attempt ${attempt}): ${error.message}`);
+            },
+          }
+        )
+      : await makeRequest();
 
     const responseHeaders: Record<string, string> = {};
     response.headers.forEach((value, key) => {

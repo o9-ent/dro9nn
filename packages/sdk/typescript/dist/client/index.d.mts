@@ -12,6 +12,8 @@ interface RequestOptions {
     headers?: Record<string, string>;
     body?: unknown;
     timeout?: number;
+    /** Skip retry for this request (useful for non-idempotent operations) */
+    noRetry?: boolean;
 }
 interface ApiResponse<T> {
     data: T;

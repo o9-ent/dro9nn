@@ -1,31 +1,5 @@
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
 // src/client/index.ts
-var client_exports = {};
-__export(client_exports, {
-  ApiError: () => ApiError,
-  CogClient: () => CogClient,
-  createClient: () => createClient
-});
-module.exports = __toCommonJS(client_exports);
-var import_core = require("@o9nn/core");
+import { Logger, retry, LogLevel } from "@o9nn/core";
 var CogClient = class {
   config;
   logger;
@@ -36,7 +10,7 @@ var CogClient = class {
       timeout: config.timeout || 3e4,
       headers: config.headers || {}
     };
-    this.logger = new import_core.Logger("CogClient", import_core.LogLevel.INFO);
+    this.logger = new Logger("CogClient", LogLevel.INFO);
   }
   /**
    * Make an HTTP request to the API
@@ -79,7 +53,7 @@ var CogClient = class {
         throw error;
       }
     };
-    const response = shouldRetry ? await (0, import_core.retry)(
+    const response = shouldRetry ? await retry(
       makeRequest,
       {
         maxAttempts: 3,
@@ -150,9 +124,9 @@ var ApiError = class extends Error {
 function createClient(config) {
   return new CogClient(config);
 }
-// Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
-  ApiError,
+
+export {
   CogClient,
+  ApiError,
   createClient
-});
+};

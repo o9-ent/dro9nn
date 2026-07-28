@@ -59,6 +59,8 @@ declare class AgentManager {
     get(agentId: string): Promise<AgentInfo>;
     /**
      * Create a new agent
+     * NOTE: Tools with execute functions are stripped before sending to the API
+     * as functions cannot be serialized. Use local tool registration for client-side execution.
      */
     create(config: AgentConfig): Promise<AgentInfo>;
     /**

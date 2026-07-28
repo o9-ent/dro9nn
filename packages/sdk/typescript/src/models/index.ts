@@ -58,7 +58,7 @@ export class ModelManager {
    * Get model information
    */
   async get(modelId: string): Promise<ModelInfo> {
-    return this.client.get<ModelInfo>(`/api/v1/models/${modelId}`);
+    return this.client.get<ModelInfo>(`/api/v1/models/${encodeURIComponent(modelId)}`);
   }
 
   /**
@@ -72,14 +72,14 @@ export class ModelManager {
    * Unload a model
    */
   async unload(modelId: string): Promise<void> {
-    await this.client.delete(`/api/v1/models/${modelId}`);
+    await this.client.delete(`/api/v1/models/${encodeURIComponent(modelId)}`);
   }
 
   /**
    * Run inference on a model
    */
   async infer(modelId: string, input: unknown, options?: InferenceOptions): Promise<InferenceResult> {
-    return this.client.post<InferenceResult>(`/api/v1/models/${modelId}/infer`, {
+    return this.client.post<InferenceResult>(`/api/v1/models/${encodeURIComponent(modelId)}/infer`, {
       input,
       options,
     });
@@ -89,7 +89,7 @@ export class ModelManager {
    * Generate text using a language model
    */
   async generate(modelId: string, options: GenerationOptions): Promise<InferenceResult> {
-    return this.client.post<InferenceResult>(`/api/v1/models/${modelId}/generate`, options);
+    return this.client.post<InferenceResult>(`/api/v1/models/${encodeURIComponent(modelId)}/generate`, options);
   }
 
   /**
@@ -100,7 +100,7 @@ export class ModelManager {
     options: GenerationOptions
   ): AsyncGenerator<{ token: string; finished: boolean }> {
     const response = await this.client.request<ReadableStream>(
-      `/api/v1/models/${modelId}/generate/stream`,
+      `/api/v1/models/${encodeURIComponent(modelId)}/generate/stream`,
       {
         method: 'POST',
         body: options,
@@ -117,20 +117,32 @@ export class ModelManager {
     const decoder = new TextDecoder();
     let buffer = '';
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
 
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = JSON.parse(line.slice(6));
-          yield data;
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const content = line.slice(6).trim();
+            // Skip SSE control messages like [DONE] or empty lines
+            if (!content || content === '[DONE]') continue;
+            try {
+              const data = JSON.parse(content);
+              yield data;
+            } catch {
+              // Skip malformed JSON lines (keep-alive, truncated data, etc.)
+              continue;
+            }
+          }
         }
       }
+    } finally {
+      reader.releaseLock();
     }
   }
 }

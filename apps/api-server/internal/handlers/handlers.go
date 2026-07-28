@@ -73,20 +73,36 @@ func ListModels(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, models)
 }
 
+// LoadModelRequest represents the request body for loading a model.
+type LoadModelRequest struct {
+	Name    string `json:"name"`
+	Backend string `json:"backend"`
+}
+
 // LoadModel loads a model.
 func LoadModel(w http.ResponseWriter, r *http.Request) {
-	var config map[string]interface{}
-	if err := json.NewDecoder(r.Body).Decode(&config); err != nil {
+	var req LoadModelRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate required fields
+	if req.Name == "" {
+		respondError(w, http.StatusBadRequest, "Missing required field: name")
+		return
+	}
+	if req.Backend == "" {
+		respondError(w, http.StatusBadRequest, "Missing required field: backend")
 		return
 	}
 
 	// Mock implementation
 	model := ModelInfo{
 		ID:        uuid.New().String(),
-		Name:      config["name"].(string),
+		Name:      req.Name,
 		Version:   "1.0.0",
-		Backend:   config["backend"].(string),
+		Backend:   req.Backend,
 		Size:      0,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -243,23 +259,39 @@ func ListAgents(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, agents)
 }
 
+// CreateAgentRequest represents the request body for creating an agent.
+type CreateAgentRequest struct {
+	Name  string      `json:"name"`
+	Model interface{} `json:"model"`
+	Tools []string    `json:"tools,omitempty"`
+}
+
 // CreateAgent creates a new agent.
 func CreateAgent(w http.ResponseWriter, r *http.Request) {
-	var config map[string]interface{}
-	if err := json.NewDecoder(r.Body).Decode(&config); err != nil {
+	var req CreateAgentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate required fields
+	if req.Name == "" {
+		respondError(w, http.StatusBadRequest, "Missing required field: name")
 		return
 	}
 
 	// Mock implementation
 	agent := AgentInfo{
 		ID:        uuid.New().String(),
-		Name:      config["name"].(string),
+		Name:      req.Name,
 		Status:    "idle",
-		Model:     config["model"],
-		Tools:     []string{},
+		Model:     req.Model,
+		Tools:     req.Tools,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
+	}
+	if agent.Tools == nil {
+		agent.Tools = []string{}
 	}
 	respondJSON(w, http.StatusCreated, agent)
 }

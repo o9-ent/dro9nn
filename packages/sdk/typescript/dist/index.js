@@ -71,25 +71,27 @@ var CogClient = class {
       fetchOptions.body = JSON.stringify(options.body);
     }
     this.logger.debug(`${method} ${endpoint}`);
-    const response = await (0, import_core.retry)(
-      async () => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(
-          () => controller.abort(),
-          options.timeout || this.config.timeout
-        );
-        try {
-          const res = await fetch(url, {
-            ...fetchOptions,
-            signal: controller.signal
-          });
-          clearTimeout(timeoutId);
-          return res;
-        } catch (error) {
-          clearTimeout(timeoutId);
-          throw error;
-        }
-      },
+    const shouldRetry = options.noRetry !== true && method === "GET";
+    const makeRequest = async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        options.timeout || this.config.timeout
+      );
+      try {
+        const res = await fetch(url, {
+          ...fetchOptions,
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        return res;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
+      }
+    };
+    const response = shouldRetry ? await (0, import_core.retry)(
+      makeRequest,
       {
         maxAttempts: 3,
         delay: 1e3,
@@ -97,7 +99,7 @@ var CogClient = class {
           this.logger.warn(`Request failed (attempt ${attempt}): ${error.message}`);
         }
       }
-    );
+    ) : await makeRequest();
     const responseHeaders = {};
     response.headers.forEach((value, key) => {
       responseHeaders[key] = value;
@@ -178,7 +180,7 @@ var ModelManager = class {
    * Get model information
    */
   async get(modelId) {
-    return this.client.get(`/api/v1/models/${modelId}`);
+    return this.client.get(`/api/v1/models/${encodeURIComponent(modelId)}`);
   }
   /**
    * Load a model
@@ -190,13 +192,13 @@ var ModelManager = class {
    * Unload a model
    */
   async unload(modelId) {
-    await this.client.delete(`/api/v1/models/${modelId}`);
+    await this.client.delete(`/api/v1/models/${encodeURIComponent(modelId)}`);
   }
   /**
    * Run inference on a model
    */
   async infer(modelId, input, options) {
-    return this.client.post(`/api/v1/models/${modelId}/infer`, {
+    return this.client.post(`/api/v1/models/${encodeURIComponent(modelId)}/infer`, {
       input,
       options
     });
@@ -205,14 +207,14 @@ var ModelManager = class {
    * Generate text using a language model
    */
   async generate(modelId, options) {
-    return this.client.post(`/api/v1/models/${modelId}/generate`, options);
+    return this.client.post(`/api/v1/models/${encodeURIComponent(modelId)}/generate`, options);
   }
   /**
    * Stream generation results
    */
   async *generateStream(modelId, options) {
     const response = await this.client.request(
-      `/api/v1/models/${modelId}/generate/stream`,
+      `/api/v1/models/${encodeURIComponent(modelId)}/generate/stream`,
       {
         method: "POST",
         body: options
@@ -224,18 +226,28 @@ var ModelManager = class {
     }
     const decoder = new TextDecoder();
     let buffer = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-      for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          const data = JSON.parse(line.slice(6));
-          yield data;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const content = line.slice(6).trim();
+            if (!content || content === "[DONE]") continue;
+            try {
+              const data = JSON.parse(content);
+              yield data;
+            } catch {
+              continue;
+            }
+          }
         }
       }
+    } finally {
+      reader.releaseLock();
     }
   }
 };
@@ -265,25 +277,31 @@ var AgentManager = class {
    * Get agent information
    */
   async get(agentId) {
-    return this.client.get(`/api/v1/agents/${agentId}`);
+    return this.client.get(`/api/v1/agents/${encodeURIComponent(agentId)}`);
   }
   /**
    * Create a new agent
+   * NOTE: Tools with execute functions are stripped before sending to the API
+   * as functions cannot be serialized. Use local tool registration for client-side execution.
    */
   async create(config) {
-    return this.client.post("/api/v1/agents", config);
+    const apiConfig = {
+      ...config,
+      tools: config.tools?.map(({ execute: _, ...tool }) => tool)
+    };
+    return this.client.post("/api/v1/agents", apiConfig);
   }
   /**
    * Delete an agent
    */
   async delete(agentId) {
-    await this.client.delete(`/api/v1/agents/${agentId}`);
+    await this.client.delete(`/api/v1/agents/${encodeURIComponent(agentId)}`);
   }
   /**
    * Chat with an agent
    */
   async chat(agentId, message, history) {
-    return this.client.post(`/api/v1/agents/${agentId}/chat`, {
+    return this.client.post(`/api/v1/agents/${encodeURIComponent(agentId)}/chat`, {
       message,
       history
     });
@@ -292,7 +310,7 @@ var AgentManager = class {
    * Execute a tool call result
    */
   async executeToolResult(agentId, toolCallId, result) {
-    return this.client.post(`/api/v1/agents/${agentId}/tool-result`, {
+    return this.client.post(`/api/v1/agents/${encodeURIComponent(agentId)}/tool-result`, {
       toolCallId,
       result
     });
@@ -301,15 +319,15 @@ var AgentManager = class {
    * Get conversation history
    */
   async getHistory(agentId, sessionId) {
-    const params = sessionId ? `?sessionId=${sessionId}` : "";
-    return this.client.get(`/api/v1/agents/${agentId}/history${params}`);
+    const params = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : "";
+    return this.client.get(`/api/v1/agents/${encodeURIComponent(agentId)}/history${params}`);
   }
   /**
    * Clear conversation history
    */
   async clearHistory(agentId, sessionId) {
-    const params = sessionId ? `?sessionId=${sessionId}` : "";
-    await this.client.delete(`/api/v1/agents/${agentId}/history${params}`);
+    const params = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : "";
+    await this.client.delete(`/api/v1/agents/${encodeURIComponent(agentId)}/history${params}`);
   }
 };
 var AgentBuilder = class {

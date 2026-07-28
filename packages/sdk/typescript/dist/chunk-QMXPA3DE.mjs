@@ -1,30 +1,5 @@
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
 // src/models/index.ts
-var models_exports = {};
-__export(models_exports, {
-  ModelManager: () => ModelManager,
-  createModelConfig: () => createModelConfig
-});
-module.exports = __toCommonJS(models_exports);
-var import_core = require("@o9nn/core");
+import { Backend, Device, DataType } from "@o9nn/core";
 var ModelManager = class {
   client;
   constructor(client) {
@@ -115,14 +90,14 @@ var ModelManager = class {
 function createModelConfig(name, options = {}) {
   return {
     name,
-    backend: options.backend || import_core.Backend.PYTORCH,
-    device: options.device || import_core.Device.CPU,
-    dtype: options.dtype || import_core.DataType.FLOAT32,
+    backend: options.backend || Backend.PYTORCH,
+    device: options.device || Device.CPU,
+    dtype: options.dtype || DataType.FLOAT32,
     ...options
   };
 }
-// Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
+
+export {
   ModelManager,
   createModelConfig
-});
+};
