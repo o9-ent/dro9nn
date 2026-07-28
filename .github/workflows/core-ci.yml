@@ -276,8 +276,8 @@ jobs:
 
       - name: Run Go tests
         run: |
-          go test -race -coverprofile=coverage.out ./packages/...
-          go test -race -coverprofile=coverage.out ./apps/...
+          PKGS=$(go work edit -json | python3 -c "import json,sys; print(' '.join(m['DiskPath']+'/...' for m in json.load(sys.stdin)['Use']))")
+          go test -race -coverprofile=coverage.out $PKGS
 
       - name: Upload Go coverage
         uses: codecov/codecov-action@v4
