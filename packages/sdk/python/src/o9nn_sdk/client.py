@@ -53,7 +53,7 @@ class CogClient:
             **(self.config.headers or {}),
         }
         if self.config.api_key:
-            headers["Authorization"] = f"******"
+            headers["Authorization"] = "Bearer " + self.config.api_key
         return headers
     
     async def __aenter__(self) -> "CogClient":

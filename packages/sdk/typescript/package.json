@@ -7,24 +7,24 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./client": {
+      "types": "./dist/client/index.d.ts",
       "import": "./dist/client/index.mjs",
-      "require": "./dist/client/index.js",
-      "types": "./dist/client/index.d.ts"
+      "require": "./dist/client/index.js"
     },
     "./models": {
+      "types": "./dist/models/index.d.ts",
       "import": "./dist/models/index.mjs",
-      "require": "./dist/models/index.js",
-      "types": "./dist/models/index.d.ts"
+      "require": "./dist/models/index.js"
     },
     "./agents": {
+      "types": "./dist/agents/index.d.ts",
       "import": "./dist/agents/index.mjs",
-      "require": "./dist/agents/index.js",
-      "types": "./dist/agents/index.d.ts"
+      "require": "./dist/agents/index.js"
     }
   },
   "files": [

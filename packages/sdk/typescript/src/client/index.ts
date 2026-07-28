@@ -55,7 +55,7 @@ export class CogClient {
     };
 
     if (this.config.apiKey) {
-      headers['Authorization'] = `******;
+      headers['Authorization'] = 'Bearer ' + this.config.apiKey;
     }
 
     const fetchOptions: RequestInit = {
