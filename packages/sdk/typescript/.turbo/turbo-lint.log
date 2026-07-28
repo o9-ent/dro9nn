@@ -1,0 +1,4 @@
+
+> @o9nn/cog-sdk@0.1.0 lint /home/runner/work/dro9nn/dro9nn/packages/sdk/typescript
+> eslint src/ --ext .ts,.tsx
+

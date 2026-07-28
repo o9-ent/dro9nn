@@ -1,0 +1,4 @@
+
+> @o9nn/core@0.1.0 lint /home/runner/work/dro9nn/dro9nn/packages/core
+> eslint src/ --ext .ts,.tsx
+
