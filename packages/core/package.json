@@ -55,7 +55,7 @@
   },
   "homepage": "https://github.com/o9nn/dro9nn/tree/main/packages/core#readme",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
