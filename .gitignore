@@ -1,3 +1,182 @@
-# Go test coverage output
+# o9nn Monorepo - Git Ignore
+
+# =========================
+# Dependencies
+# =========================
+node_modules/
+.pnpm-store/
+vendor/
+__pypackages__/
+
+# =========================
+# Build outputs
+# =========================
+dist/
+build/
+out/
+.next/
+.nuxt/
+target/
+*.egg-info/
+*.whl
+*.tar.gz
+
+# =========================
+# IDE & Editors
+# =========================
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+*.swp
+*.swo
+*~
+
+# =========================
+# Environment & Config
+# =========================
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+!.env.example
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# =========================
+# Go
+# =========================
+*.exe
+*.exe~
+*.dll
+*.dylib
 coverage.out
 coverage.html
+
+# =========================
+# Rust
+# =========================
+/target/
+Cargo.lock
+*.rlib
+
+# =========================
+# C/C++
+# =========================
+*.o
+*.a
+*.obj
+*.lib
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# =========================
+# ML/AI Artifacts
+# =========================
+*.ckpt
+*.pth
+*.pt
+*.safetensors
+*.gguf
+*.ggml
+*.bin
+!packages/**/bin/
+models/
+checkpoints/
+runs/
+wandb/
+mlruns/
+*.tfevents.*
+
+# =========================
+# Logs & Temp Files
+# =========================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+tmp/
+temp/
+
+# =========================
+# Test & Coverage
+# =========================
+coverage/
+.nyc_output/
+junit.xml
+test-results/
+*.lcov
+
+# =========================
+# Docker
+# =========================
+.docker/
+
+# =========================
+# Terraform
+# =========================
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# =========================
+# Turbo & Build Cache
+# =========================
+.turbo/
+.vercel/
+.netlify/
+.cache/
+
+# =========================
+# Misc
+# =========================
+*.bak
+*.orig
+
+# =========================
+# OS-specific
+# =========================
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
