@@ -51,6 +51,31 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.43)
 
+  packages/gnn:
+    dependencies:
+      '@o9nn/core':
+        specifier: workspace:*
+        version: link:../core
+      '@o9nn/ml-core':
+        specifier: workspace:*
+        version: link:../ml/core
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      '@typescript-eslint/parser':
+        specifier: ^7.18.0
+        version: 7.18.0(eslint@8.57.1)(typescript@5.9.3)
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.24)(typescript@5.9.3)(yaml@2.9.0)
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@20.19.43)
+
   packages/ml/core:
     dependencies:
       '@o9nn/core':
