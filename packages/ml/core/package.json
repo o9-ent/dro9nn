@@ -1,0 +1,77 @@
+{
+  "name": "@o9nn/ml-core",
+  "version": "0.1.0",
+  "description": "CogML Core - Unified ML Framework Layer with backend abstraction for PyTorch, JAX, and TensorFlow",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./tensor": {
+      "types": "./dist/tensor/index.d.ts",
+      "import": "./dist/tensor/index.mjs",
+      "require": "./dist/tensor/index.js"
+    },
+    "./data": {
+      "types": "./dist/data/index.d.ts",
+      "import": "./dist/data/index.mjs",
+      "require": "./dist/data/index.js"
+    },
+    "./model": {
+      "types": "./dist/model/index.d.ts",
+      "import": "./dist/model/index.mjs",
+      "require": "./dist/model/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/tensor/index.ts src/data/index.ts src/model/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts src/tensor/index.ts src/data/index.ts src/model/index.ts --format cjs,esm --dts --watch",
+    "lint": "eslint src/ --ext .ts,.tsx",
+    "test": "vitest",
+    "test:unit": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "o9nn",
+    "ml",
+    "cogml",
+    "pytorch",
+    "jax",
+    "tensorflow",
+    "machine-learning",
+    "deep-learning"
+  ],
+  "author": "o9nn Organization",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/o9nn/dro9nn.git",
+    "directory": "packages/ml/core"
+  },
+  "bugs": {
+    "url": "https://github.com/o9nn/dro9nn/issues"
+  },
+  "homepage": "https://github.com/o9nn/dro9nn/tree/main/packages/ml/core#readme",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@o9nn/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "^7.18.0",
+    "@types/node": "^20.0.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.1"
+  }
+}
