@@ -1,0 +1,209 @@
+{
+  "name": "o9nn-cognitive",
+  "displayName": "o9nn Cognitive",
+  "description": "o9nn Cognitive Platform integration for VSCode - AI/ML development tools",
+  "version": "0.1.0",
+  "publisher": "o9nn",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "ml",
+    "llm",
+    "cognitive",
+    "agents",
+    "neural network"
+  ],
+  "activationEvents": [
+    "workspaceContains:o9nn.config.yaml",
+    "workspaceContains:o9nn.config.json"
+  ],
+  "main": "./dist/extension.js",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/o9nn/dro9nn.git"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "o9nn.startServer",
+        "title": "o9nn: Start Development Server"
+      },
+      {
+        "command": "o9nn.stopServer",
+        "title": "o9nn: Stop Development Server"
+      },
+      {
+        "command": "o9nn.openRepl",
+        "title": "o9nn: Open REPL"
+      },
+      {
+        "command": "o9nn.generateAgent",
+        "title": "o9nn: Generate Agent"
+      },
+      {
+        "command": "o9nn.generateTool",
+        "title": "o9nn: Generate Tool"
+      },
+      {
+        "command": "o9nn.listModels",
+        "title": "o9nn: List Models"
+      },
+      {
+        "command": "o9nn.downloadModel",
+        "title": "o9nn: Download Model"
+      },
+      {
+        "command": "o9nn.runInference",
+        "title": "o9nn: Run Inference"
+      },
+      {
+        "command": "o9nn.initProject",
+        "title": "o9nn: Initialize New Project"
+      }
+    ],
+    "configuration": {
+      "title": "o9nn Cognitive",
+      "properties": {
+        "o9nn.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:8080",
+          "description": "o9nn API server URL"
+        },
+        "o9nn.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "o9nn API key for authentication"
+        },
+        "o9nn.defaultModel": {
+          "type": "string",
+          "default": "llama-2-7b-chat",
+          "description": "Default model for inference"
+        },
+        "o9nn.cogctlPath": {
+          "type": "string",
+          "default": "cogctl",
+          "description": "Path to cogctl executable"
+        },
+        "o9nn.autoStartServer": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically start development server on workspace open"
+        },
+        "o9nn.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show o9nn status in the status bar"
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "o9nn-explorer",
+          "title": "o9nn Cognitive",
+          "icon": "$(brain)"
+        }
+      ]
+    },
+    "views": {
+      "o9nn-explorer": [
+        {
+          "id": "o9nn-models",
+          "name": "Models"
+        },
+        {
+          "id": "o9nn-agents",
+          "name": "Agents"
+        },
+        {
+          "id": "o9nn-tools",
+          "name": "Tools"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "o9nn.listModels",
+          "when": "view == o9nn-models",
+          "group": "navigation"
+        },
+        {
+          "command": "o9nn.downloadModel",
+          "when": "view == o9nn-models"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "o9nn.runInference",
+          "when": "editorHasSelection",
+          "group": "o9nn"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "o9nn.openRepl",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r"
+      },
+      {
+        "command": "o9nn.runInference",
+        "key": "ctrl+shift+i",
+        "mac": "cmd+shift+i",
+        "when": "editorTextFocus"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "python",
+        "path": "./snippets/python.json"
+      },
+      {
+        "language": "typescript",
+        "path": "./snippets/typescript.json"
+      },
+      {
+        "language": "go",
+        "path": "./snippets/go.json"
+      }
+    ],
+    "languages": [
+      {
+        "id": "o9nn-config",
+        "aliases": ["o9nn Config", "o9nn"],
+        "filenames": ["o9nn.config.yaml", "o9nn.config.json"],
+        "configuration": "./language-configuration.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.0",
+    "@vscode/vsce": "^2.22.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}
