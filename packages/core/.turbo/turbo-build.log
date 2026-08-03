@@ -9,17 +9,17 @@
 [34mCJS[39m Build start
 [34mESM[39m Build start
 [32mCJS[39m [1mdist/index.js       [22m[32m6.93 KB[39m
-[32mCJS[39m [1mdist/types/index.js [22m[32m1.90 KB[39m
 [32mCJS[39m [1mdist/utils/index.js [22m[32m5.90 KB[39m
-[32mCJS[39m ⚡️ Build success in 45ms
+[32mCJS[39m [1mdist/types/index.js [22m[32m1.90 KB[39m
+[32mCJS[39m ⚡️ Build success in 26ms
+[32mESM[39m [1mdist/index.mjs          [22m[32m430.00 B[39m
 [32mESM[39m [1mdist/types/index.mjs    [22m[32m117.00 B[39m
 [32mESM[39m [1mdist/chunk-FT3P4Q37.mjs [22m[32m894.00 B[39m
-[32mESM[39m [1mdist/index.mjs          [22m[32m430.00 B[39m
 [32mESM[39m [1mdist/utils/index.mjs    [22m[32m275.00 B[39m
 [32mESM[39m [1mdist/chunk-ZEJVFSR5.mjs [22m[32m4.69 KB[39m
-[32mESM[39m ⚡️ Build success in 45ms
+[32mESM[39m ⚡️ Build success in 27ms
 [34mDTS[39m Build start
-[32mDTS[39m ⚡️ Build success in 1270ms
+[32mDTS[39m ⚡️ Build success in 1299ms
 [32mDTS[39m [1mdist/index.d.ts        [22m[32m521.00 B[39m
 [32mDTS[39m [1mdist/types/index.d.ts  [22m[32m2.93 KB[39m
 [32mDTS[39m [1mdist/utils/index.d.ts  [22m[32m1.84 KB[39m

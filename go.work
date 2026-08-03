@@ -1,5 +1,5 @@
 // o9nn Monorepo - Go Workspace Configuration
-// Phase 1: Foundation & Consolidation
+// Phase 2: AI/ML Platform Integration
 
 go 1.24.13
 
@@ -26,10 +26,10 @@ use (
 	./packages/llm/inference
 	./packages/llm/serving
 	./packages/llm/training
-	./packages/ml/jax
-	./packages/ml/onnx
 
 	// ML integrations
+	./packages/ml/jax
+	./packages/ml/onnx
 	./packages/ml/torch
 
 	// SDKs
