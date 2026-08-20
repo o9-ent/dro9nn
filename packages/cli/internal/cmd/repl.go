@@ -187,7 +187,7 @@ func handleREPLCommand(state *replState, input string) bool {
 }
 
 func printREPLHelp() {
-	fmt.Println(`
+	fmt.Print(`
 REPL Commands:
   /help, /h            Show this help message
   /exit, /quit, /q     Exit the REPL
